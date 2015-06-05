@@ -258,6 +258,11 @@ public:
 
             for( PPixel pix = head; pix != 0; pix = pix0[pix].getNext() )
             {
+            	//======= fixing by Haojin 05.06.2015 ======//
+            	//bug refer to http://code.opencv.org/issues/4379
+            	if(pix == pix0[pix].getNext())
+            		break;
+            	//==========================================//
                 int y = pix/step;
                 int x = pix - y*step;
 
