@@ -251,17 +251,21 @@ public:
         }
 
         // convert the point set to CvSeq
-        Rect capture( const Pixel* pix0, int step, vector<Point>& region ) const
+        Rect capture( const Pixel* pix0, int step, vector<Point>& region , int pix_total) const
         {
             int xmin = INT_MAX, ymin = INT_MAX, xmax = INT_MIN, ymax = INT_MIN;
             region.clear();
-
+            int pix_counter = 0;
             for( PPixel pix = head; pix != 0; pix = pix0[pix].getNext() )
             {
             	//======= fixing by Haojin 05.06.2015 ======//
             	//bug refer to http://code.opencv.org/issues/4379
-            	if(pix == pix0[pix].getNext())
+            	if(pix == pix0[pix].getNext()){
             		break;
+            	}else{
+            		if(pix_counter > pix_total)
+            			break;
+            	}
             	//==========================================//
                 int y = pix/step;
                 int x = pix - y*step;
@@ -272,6 +276,7 @@ public:
                 ymax = std::max(ymax, y);
 
                 region.push_back(Point(x, y));
+                pix_counter++;
             }
 
             return Rect(xmin, ymin, xmax - xmin + 1, ymax - ymin + 1);
@@ -347,6 +352,7 @@ public:
     void pass( const Mat& img, vector<vector<Point> >& msers, vector<Rect>& bboxvec,
               Size size, const int* level_size, int mask )
     {
+    	int pix_total = img.total();
         CompHistory* histptr = &histbuf[0];
         int step = size.width;
         Pixel *ptr0 = &pixbuf[0], *ptr = &ptr0[step+1];
@@ -439,8 +445,7 @@ public:
                     {
                         msers.push_back(vector<Point>());
                         vector<Point>& mser = msers.back();
-
-                        Rect box = comptr->capture( ptr0, step, mser );
+                        Rect box = comptr->capture( ptr0, step, mser, pix_total );
                         bboxvec.push_back(box);
                     }
                     comptr->growHistory( histptr++ );
@@ -463,7 +468,7 @@ public:
                                 msers.push_back(vector<Point>());
                                 vector<Point>& mser = msers.back();
 
-                                Rect box = comptr->capture( ptr0, step, mser );
+                                Rect box = comptr->capture( ptr0, step, mser, pix_total);
                                 bboxvec.push_back(box);
                             }
                             comptr->growHistory( histptr++ );
@@ -999,12 +1004,13 @@ void MSER_Impl::detectRegions( InputArray _src, vector<vector<Point> >& msers, v
         if( !params.pass2Only )
             pass( src, msers, bboxes, size, level_size, 0 );
         // brighter to darker (MSER-)
+
         preprocess2( src, level_size );
         pass( src, msers, bboxes, size, level_size, 255 );
     }
     else
     {
-        CV_Assert( src.type() == CV_8UC3 || src.type() == CV_8UC4 );
+    	CV_Assert( src.type() == CV_8UC3 || src.type() == CV_8UC4 );
         extractMSER_8uC3( src, msers, bboxes, params );
     }
 }
