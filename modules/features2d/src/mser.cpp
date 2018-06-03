@@ -256,6 +256,7 @@ public:
             int xmin = INT_MAX, ymin = INT_MAX, xmax = INT_MIN, ymax = INT_MIN;
             region.clear();
             int pix_counter = 0;
+
             for( PPixel pix = head; pix != 0; pix = pix0[pix].getNext() )
             {
             	//======= fixing by Haojin 05.06.2015 ======//
@@ -263,8 +264,9 @@ public:
             	if(pix == pix0[pix].getNext()){
             		break;
             	}else{
-            		if(pix_counter > pix_total)
+            		if(pix_counter > pix_total){
             			break;
+            		}
             	}
             	//==========================================//
                 int y = pix/step;
@@ -278,7 +280,7 @@ public:
                 region.push_back(Point(x, y));
                 pix_counter++;
             }
-
+            //printf("pix_counter: %d, total pixels: %d\n", pix_counter, pix_total);
             return Rect(xmin, ymin, xmax - xmin + 1, ymax - ymin + 1);
         }
 
